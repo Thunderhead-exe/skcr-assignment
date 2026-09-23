@@ -62,7 +62,7 @@ What the annotated frames show:
 
 ![Diagram](docs/skcr-assignment-diagram.png)
 
-Each box is a plain function or small class with explicit inputs and outputs, in its own module:
+## Modules
 
 | Module | Responsibility |
 |---|---|
