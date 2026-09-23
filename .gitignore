@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+.env
+
+# Virtual environments
+.venv
+
+# Input/output videos
+*.mp4
+
+# Model weights
+models/
+
+# Output artifacts
+outputs/

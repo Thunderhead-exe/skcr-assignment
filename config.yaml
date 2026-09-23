@@ -1,0 +1,54 @@
+# Pipeline configuration. 
+
+# Random seed for the k-means initialisation, so team clustering is identical on every run.
+seed: 42
+
+# --- Input video handling -----------------------------------------------------------------
+video:
+  target_width: 1280
+  target_height: 720
+  target_fps: 10
+  max_duration_s: null        # null = whole video; e.g. 20 to process only the first 20 s
+
+# --- Detector -----------------------------------------------------------------------------
+model:
+  weights: models/yolo26s.pt  # official Ultralytics COCO weights, downloaded on first run
+  device: auto                # auto -> cuda, then mps, then cpu; or set one explicitly
+  imgsz: 1280                 # network input size
+  # Maps model class id -> pipeline role. Classes not listed are ignored. COCO has no football
+  # classes, so "person" is split into team_a / team_b / referee / other by jersey colour (teams.py).
+  # For a football fine-tuned model (see README) use e.g.:
+  #   {0: ball, 1: goalkeeper, 2: player, 3: referee} and set teams.n_clusters: 2
+  class_map:
+    0: person                 # COCO "person"
+    32: ball                  # COCO "sports ball"
+  conf:                       # minimum confidence per role; lower-scoring detections are dropped
+    person: 0.30              # COCO people
+    player: 0.30              # fine-tuned model only
+    goalkeeper: 0.30          # fine-tuned model only
+    referee: 0.30             # fine-tuned model only
+    ball: 0.15                # low: the ball is tiny and often blurred (only the best candidate is kept)
+
+# --- Team calibration (jersey-colour clustering) ----------------------------------------
+teams:
+  calibration_frames: 60      # frames sampled evenly across the whole video to learn the kit colours
+  min_people_per_frame: 8     # a calibration frame is used only if it is a wide shot (no close-ups)
+  n_clusters: 3               # 2 teams + referees (the third-largest cluster); 2 with a fine-tuned model
+  outlier_distance: 40.0      # Lab colour distance above which a person is "other" (goalkeepers, staff)
+
+# --- Pressing analysis ------------------------------------------------------------------
+pressing:
+  possession_radius: 0.5      # ball within 0.5 x a player's box height from their feet = that player has it
+  smoothing_window_s: 3.0     # rolling window (seconds) of the "who is pressing" indicator
+
+# --- Outputs ----------------------------------------------------------------------------
+output:
+  root_dir: outputs           # each run writes to outputs/<run_id>/ (never overwritten)
+  video_name: output.mp4      # name of the annotated video inside the run folder
+  fourcc: [avc1, mp4v]        # codecs tried in order: H.264 if available, else MPEG-4 Part 2
+  log_every_n_frames: 10      # logging rate
+  num_sample_images: 8        # annotated frames saved in visualizations/, spread over the video
+
+# --- Logging ----------------------------------------------------------------------------
+logging:
+  level: INFO                 # DEBUG | INFO | WARNING | ERROR, for the console and pipeline.log
