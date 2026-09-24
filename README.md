@@ -1,4 +1,4 @@
-# SkillCorner Assingnment
+# SKCR Assingnment
 
 This project takes a video input and:
 
